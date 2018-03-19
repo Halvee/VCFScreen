@@ -1,0 +1,11 @@
+INFO:gnomadE_af_popmax le 0.0
+INFO:gnomadG_af_popmax le 0.0
+INFO:AC le 2
+FILTER eq None
+INFO:QD ge 2
+INFO:MQ ge 40
+INFO:gnomadG_FILTER eq None
+INFO:gnomadE_FILTER eq None
+INFO:REPEATMASKER eq None
+INFO:SIMPLEREP eq None
+INFO:SEGREP eq None

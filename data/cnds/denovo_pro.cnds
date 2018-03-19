@@ -1,0 +1,6 @@
+gt_depths ge 10
+gt_quals ge 30
+gt_alt_freqs ge 0.3
+gt_phred_ll_homref ge 10
+gt_phred_ll_het le 0
+gt_phred_ll_homalt ge 10

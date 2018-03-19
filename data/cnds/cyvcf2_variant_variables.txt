@@ -1,0 +1,45 @@
+ALT : alternate allele (A, C, G, T, or indel nts)
+CHROM : chromosome (1-22, X, Y, etc)
+FILTER : PASS, or filtration classification. Set as None in cyvcf2 is PASS.
+FORMAT :  format of per-sample call data for each genotype in VCF.
+ID :  variant ID, if provided in VCF.
+INFO : string in VCF containing variant metadata.
+POS : genomic position of variant, 1-based.
+QUAL : Quality score of variant across samples.
+REF : Reference nucleotide(s).
+aaf : alternate allele frequency across samples in VCF provided.
+call_rate : percentage of samples in which a genotype call was able to be made.
+end : end position of variant (as opposed to POS, which is more like start pos).
+format : 
+genotypes : genotypes for variant, per-sample.
+gt_alt_depths : read depth of alternate allele, per-sample.
+gt_alt_freqs : frequency of alternate allele in reads, per-sample.
+gt_bases : genotype bases, per-sample.
+gt_depths : read depth at variant site, per-sample.
+gt_phases : 
+gt_phred_ll_het : variant genotype phred likelihood (heterozygous), per-sample.
+gt_phred_ll_homalt : variant genotype phred likelihood (hom alt), per-sample.
+gt_phred_ll_homref : variant genotype phred likelihood (hom ref), per-sample.
+gt_quals : genotype QUAL scores, per-sample.
+gt_ref_depths : read depths supporting ref allele, per-sample.
+gt_types : 
+is_deletion : variant is a deletion (True/False).
+is_indel :  is variant an indel (True/False)
+is_snp :  is variant an snv (True/False)
+is_sv :  is variant a structural variant (True/False)
+is_transition : is single nucleotide variant a transition (A<->G, C<->T),
+                as opposed to a transversion (A<->C, A<->T, G<->C, G<->T)?
+                transitions are 2x as common as transversions.
+nucl_diversity : diversity of alternate alleles at site.
+num_called : number of called genotypes for variant.
+num_het :  number of heterozygous gentoypes for variant in VCF.
+num_hom_alt : number of homozygous alt genotypes for variant in VCF.
+num_hom_ref : number of homozygous ref genotypes for variant in VCF. 
+num_unknown : number of unknown/uncallable genotypes for variant in VCF.
+ploidy : 
+relatedness :  
+set_format :  
+set_pos :  
+start : start position of variant.
+var_subtype :  
+var_type :

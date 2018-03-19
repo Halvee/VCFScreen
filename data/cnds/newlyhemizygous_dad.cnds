@@ -1,0 +1,3 @@
+gt_depths ge 10
+gt_quals ge 30
+gt_alt_freqs lt 0.05

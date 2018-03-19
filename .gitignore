@@ -1,0 +1,3 @@
+data/gts/*
+*.pyc
+vcfscreen/*.pyc

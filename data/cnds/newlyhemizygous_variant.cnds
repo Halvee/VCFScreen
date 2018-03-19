@@ -1,0 +1,8 @@
+INFO:gnomadE_af_popmax lt 0.0005
+INFO:gnomadG_af_popmax lt 0.0005
+FILTER eq None
+INFO:QD ge 2
+INFO:MQ ge 40
+INFO:gnomadG_FILTER eq None
+INFO:gnomadE_FILTER eq None
+INFO:gnomadG_hom_m eq 0
