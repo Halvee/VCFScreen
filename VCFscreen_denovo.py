@@ -150,6 +150,12 @@ def main(ARGS = None):
                                            impact_subfield="IMPACT") 
             (csqs_maximpact_list, max_csq_scores, min_csq_scores) = res
 
+        ## filter on internal ctrl-only maf, can't do in var cnds file
+        if args.internal_ctrl_af_max != None:
+            ctrl_af = cyvcf_variant.compute_maf(ctrl_idxs)
+            if ctrl_af >= args.internal_ctrl_af_max:
+                continue
+
         ## variant cnds file provided, filter exclusively on that
         if var_cnds != None:
             if var_cnds.test_variant(vcf_variant) == False: continue
@@ -176,12 +182,6 @@ def main(ARGS = None):
             ## filter on user-defined maximum internal MAF
             if args.internal_af_max != None:
                 if vcf_variant.INFO.get("AF") > args.internal_af_max:
-                    continue
-
-            ## filter on user-defined maximum internal control-only MAF
-            if args.internal_ctrl_af_max != None:
-                ctrl_af = cyvcf_variant.compute_maf(ctrl_idxs)
-                if ctrl_af >= args.internal_ctrl_af_max:
                     continue
 
             ## filter on user-defined maximum external MAF
