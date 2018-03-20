@@ -8,6 +8,7 @@ Date last modified : 03/20/2018
 '''
 
 import cyvcf2
+from annot import AnnotTxs
 
 class Cyvcf2Vcf(object):
     '''
@@ -77,7 +78,7 @@ class Cyvcf2Vcf(object):
         else:
             return header_list
 
-    def iterator(intervals, cyvcf2_vcf_i, verbose=False):
+    def iterator(self, intervals, verbose=False):
         '''
         iterator function for going through every vcf in every provided
         interval in vcf
@@ -95,7 +96,8 @@ class Cyvcf2Variant(object):
     as well as functions for accessing cyvcf2.Variant variables
     '''
     def __init__(self, cyvcf2_variant_i):
-        self.cyvcf2_variant = cyvcf_variant_i
+        self.cyvcf2_variant = cyvcf2_variant_i
+        self.annot_txs = None
         self.maf = None
         self.case_maf = None
         self.ctrl_maf = None
@@ -156,7 +158,7 @@ class Cyvcf2Variant(object):
         (None, G) for example. In rare var studies, beware of genotypes 
         made of a mixture of two non-reference alleles. 
         '''
-        ref = self.cyvcf2_varaint.REF
+        ref = self.cyvcf2_variant.REF
         alts = self.cyvcf2_variant.ALT
         sample_gts = self.cyvcf2_variant.genotypes[sample_idx]
         gt1_idx = sample_gts[0]
@@ -168,6 +170,75 @@ class Cyvcf2Variant(object):
         if gt2_idx == 0:
             gt2 = str(alts[gt2_idx-1])
         return gt1,gt2
+
+    def get_annot_txs(self, csq_keys, csq_subfield="CSQ"):
+        """
+        store annotation data from INFO field, consequence subfield
+        """
+        if self.annot_txs != None: return self
+        csqs_str = self.cyvcf2_variant.INFO.get(csq_subfield)
+        if csqs_str == None: return self
+        self.annot_txs = AnnotTxs(csq_keys, csqs_str)
+        return self
+
+    def maxmin_csqs(self,
+                    max_impact_csqs=None,
+                    max_csq_scores=None, 
+                    min_csq_scores=None,
+                    csq_subfield="CSQ",
+                    impact_subfield="IMPACT"):
+        '''
+        define consequence subfield as well as impact subfield within
+        consequence, derive metadata to go along with gene/transcript with
+        maximum impact classification, if provided by user also find max or 
+        min defined score variable, return as 
+        [max_impact_csqs,max_csq_scores,min_csq_scores]
+        '''
+        if self.annot_txs == None: return [],[],[]
+
+        annottxs_i = self.annot_txs                                  
+
+        csqs_maximpact_list = []
+        if max_impact_csqs != None:
+            csqs_max_impact = annottxs_i.max_csq(max_impact_csqs,                                      
+                                                 impact_subfield,                                      
+                                                 "max")     
+            for csq_max_impact in csqs_max_impact:
+                csqs_maximpact_list.append(csq_max_impact)
+        
+        max_csq_scores_list = []
+        if max_csq_scores != None:
+            for max_csq_score in max_csq_scores:
+                csq_max = annottxs_i.max_csq([max_csq_score],                                      
+                                             max_csq_score,                                      
+                                             "max")
+                max_csq_scores_list.append(csq_max[0])
+
+        min_csq_scores_list = []
+        if min_csq_scores != None:
+            for min_csq_score in min_csq_scores:
+                csq_min = annottxs_i.max_csq([min_csq_score],
+                                             min_csq_score,
+                                             "min")
+                min_csq_scores_list.append(csq_min[0])
+        
+        return csqs_maximpact_list,max_csq_scores_list,min_csq_scores_list
+
+    def qual_impacts_screen(self, 
+                            qual_impacts,
+                            csq_subfield="CSQ"):
+        '''
+        screen consequence subfield in VCF INFO data to see if variant has 
+        at least one transcript with one of the qualifying impact classifs
+        '''
+        qual_impact_pass = False
+        for qual_impact in qual_impacts:
+            csq_str = self.cyvcf2_variant.INFO.get(csq_subfield)
+            if csq_str == None: break
+            elif csq_str.find(qual_impact) != -1:
+                qual_impact_pass = True
+                break
+        return qual_impact_pass
 
 def iterator(intervals, cyvcf2_vcf_i, verbose=False):
     '''
