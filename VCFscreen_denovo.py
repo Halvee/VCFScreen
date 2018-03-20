@@ -50,12 +50,6 @@ def main(ARGS = None):
     n_ctrls = len(samples_i.ctrls)
 
     """
-    get case, control idxs
-    """
-    case_idxs = [samples_i.samples[x].idx for x in samples_i.cases]
-    ctrl_idxs = [samples_i.samples[x].idx for x in samples_i.ctrls]
-
-    """
     read cnds files
     """
     var_cnds = None
@@ -83,6 +77,12 @@ def main(ARGS = None):
     create sample idx
     """
     samples_i.get_vcf_idx(vcf.samples)
+
+    """
+    get case, control idxs
+    """
+    case_idxs = [samples_i.samples[x].idx for x in samples_i.cases]
+    ctrl_idxs = [samples_i.samples[x].idx for x in samples_i.ctrls]
 
     """
     iterate through all variants, performing de novo screen on each one

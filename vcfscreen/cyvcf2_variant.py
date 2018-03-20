@@ -242,9 +242,9 @@ class Cyvcf2Variant(object):
         gts = self.cyvcf2_variant.gt_types[samples_include_idxs]
         n_alt_alleles = 0
         n_samples = len(gts)
-        for gt in gts:
-            if gt != 3: 
-                n_alt_alleles += gt
+        for i in range(len(gts)):
+            if gts[i] != 3: 
+                n_alt_alleles += gts[i]
         maf = float(n_alt_alleles) / (2*n_samples) 
         return maf
 
