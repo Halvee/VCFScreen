@@ -63,15 +63,15 @@ def main(ARGS = None):
     init cyvcf2 VCF obj, get info subfields, header for output
     """
     vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
-    info_subfields = cyvcf2_variant.get_info_subfields(vcf)
-    csq_keys = cyvcf2_variant.get_csq_keys(vcf, spliton="Format: ", delim="|")
-    vcf_header_str = cyvcf2_variant.header_to_list(vcf,
-                                                   gt_varnames=GT_VARNAMES,
-                                                   max_impact=args.max_impact,
-                                                   max_impact_csqs=args.max_impact_csqs,
-                                                   max_csq_scores=args.max_csq_scores,
-                                                   min_csq_scores=args.min_csq_scores,
-                                                   delim="\t")
+    cyvcf2_vcf = Cyvcf2Vcf(vcf)
+    cyvcf2_vcf.get_info_subfields()
+    cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
+    vcf_header_str = cyvcf2_vcf.header_to_list(gt_varnames=GT_VARNAMES,
+                                               max_impact=args.max_impact,
+                                               max_impact_csqs=args.max_impact_csqs,
+                                               max_csq_scores=args.max_csq_scores,
+                                               min_csq_scores=args.min_csq_scores,
+                                               delim="\t")
     
     """
     create sample idx
@@ -106,7 +106,7 @@ def main(ARGS = None):
     """
     parse VCF file looking for de novo variant calls
     """
-    for vcf_variant in cyvcf2_variant.iterator(intervals, vcf):
+    for vcf_variant in cyvcf2_vcf.iterator(intervals):
         linenum+=1
         #if linenum == 1000000: break
         if vcf_variant.CHROM != prev_chrom:
@@ -119,11 +119,16 @@ def main(ARGS = None):
         alt = vcf_variant.ALT[0]
         if alt == '*': continue
 
+        """
+        create new Cyvcf2Variant instance
+        """
+        cyvcf2_variant=Cyvcf2Variant(vcf_variant)
+
+
         ## if no qualifying impact str found in CSQ, skip
         if args.qual_impacts != None:
-            res = screens.qual_impacts_screen(vcf_variant, 
-                                              args.qual_impacts,
-                                              csq_subfield="CSQ")
+            res = cyvcf2_variant.qual_impacts_screen(args.qual_impacts,
+                                                     csq_subfield="CSQ")
             if res == False: continue
 
         ## if desired, derive max impact annots from var, along with other
@@ -132,13 +137,12 @@ def main(ARGS = None):
         max_csq_scores = []
         min_csq_scores = []
         if args.max_impact == True:
-            res = screens.get_maxmin_csqs(vcf_variant,
-                                          csq_keys,
-                                          max_impact_csqs=args.max_impact_csqs,
-                                          max_csq_scores=args.max_csq_scores, 
-                                          min_csq_scores=args.min_csq_scores,
-                                          csq_subfield="CSQ",
-                                          impact_subfield="IMPACT")
+            cyvcf2_variant.get_annot_txs(cyvcf2_vcf.csq_keys,
+                                         csq_subfield="CSQ")
+            res=cyvcf2_variant.maxmin_csqs(max_impact_csqs=args.max_impact_csqs,
+                                           max_csq_scores=args.max_csq_scores,
+                                           min_csq_scores=args.min_csq_scores,
+                                           impact_subfield="IMPACT") 
             (csqs_maximpact_list, max_csq_scores, min_csq_scores) = res
 
         ## variant cnds file provided, filter exclusively on that

@@ -114,18 +114,22 @@ def main(ARGS = None):
     """
     only parse X chromosome, since this is only place where hemi vars can happen
     """
-    for vcf_variant in vcf(args.x_chrom_interval):
+    for vcf_variant in cyvcf2_vcf.cyvcf2_vcf(args.x_chrom_interval):
         """
         assume single allele per site, exclude sites with call as '*'
         """
         alt = vcf_variant.ALT[0]
         if alt == '*': continue
 
+        """
+        create new Cyvcf2Variant instance 
+        """
+        cyvcf2_variant=Cyvcf2Variant(vcf_variant)
+
         ## if no qualifying impact str found in CSQ, skip
         if args.qual_impacts != None:
-            res = screens.qual_impacts_screen(vcf_variant, 
-                                              args.qual_impacts,
-                                              csq_subfield="CSQ")
+            res = cyvcf2_variant.qual_impacts_screen(args.qual_impacts,
+                                                     csq_subfield="CSQ")
             if res == False: continue
 
         ## if desired, derive max impact annots from var, along with other
@@ -134,13 +138,12 @@ def main(ARGS = None):
         max_csq_scores = []
         min_csq_scores = []
         if args.max_impact == True:
-            res = screens.get_maxmin_csqs(vcf_variant,
-                                          csq_keys,
-                                          max_impact_csqs=args.max_impact_csqs,
-                                          max_csq_scores=args.max_csq_scores, 
-                                          min_csq_scores=args.min_csq_scores,
-                                          csq_subfield="CSQ",
-                                          impact_subfield="IMPACT")
+            cyvcf2_variant.get_annot_txs(cyvcf2_vcf.csq_keys,
+                                         csq_subfield="CSQ")
+            res=cyvcf2_variant.maxmin_csqs(max_impact_csqs=args.max_impact_csqs,
+                                           max_csq_scores=args.max_csq_scores,
+                                           min_csq_scores=args.min_csq_scores,
+                                           impact_subfield="IMPACT") 
             (csqs_maximpact_list, max_csq_scores, min_csq_scores) = res
 
         ## variant cnds file provided, filter exclusively on that

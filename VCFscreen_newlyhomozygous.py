@@ -105,12 +105,17 @@ def main(ARGS = None):
     """
     parse VCF file looking for de novo variant calls
     """
-    for vcf_variant in cyvcf2_variant.iterator(intervals, vcf):
+    for vcf_variant in cyvcf2_vcf.iterator(intervals):
         linenum+=1
         #if linenum == 1000000: break
         if vcf_variant.CHROM != prev_chrom:
             print("Extracting newly homozygous vars from chrom " + vcf_variant.CHROM)
             prev_chrom = vcf_variant.CHROM
+
+        """
+        create new Cyvcf2Variant instance 
+        """
+        cyvcf2_variant=Cyvcf2Variant(vcf_variant)
 
         """
         assume single alternate allele per row, exclude sites with call as '*'
@@ -122,9 +127,8 @@ def main(ARGS = None):
 
         ## if no qualifying impact str found in CSQ, skip
         if args.qual_impacts != None:
-            res = screens.qual_impacts_screen(vcf_variant, 
-                                              args.qual_impacts,
-                                              csq_subfield="CSQ")
+            res = cyvcf2_variant.qual_impacts_screen(args.qual_impacts,
+                                                     csq_subfield="CSQ")
             if res == False: continue
 
         ## if desired, derive max impact annots from var, along with other
@@ -133,13 +137,12 @@ def main(ARGS = None):
         max_csq_scores = []
         min_csq_scores = []
         if args.max_impact == True:
-            res = screens.get_maxmin_csqs(vcf_variant,
-                                          csq_keys,
-                                          max_impact_csqs=args.max_impact_csqs,
-                                          max_csq_scores=args.max_csq_scores, 
-                                          min_csq_scores=args.min_csq_scores,
-                                          csq_subfield="CSQ",
-                                          impact_subfield="IMPACT")
+            cyvcf2_variant.get_annot_txs(cyvcf2_vcf.csq_keys,
+                                         csq_subfield="CSQ")
+            res=cyvcf2_variant.maxmin_csqs(max_impact_csqs=args.max_impact_csqs,
+                                           max_csq_scores=args.max_csq_scores,
+                                           min_csq_scores=args.min_csq_scores,
+                                           impact_subfield="IMPACT") 
             (csqs_maximpact_list, max_csq_scores, min_csq_scores) = res
 
         ## variant cnds file provided, filter exclusively on that
@@ -225,10 +228,9 @@ def main(ARGS = None):
             iids = list(hom_carriers)
             for iid in iids: 
                 samples_i.samples[iid].varcounts["hom"] += 1
-            outs = cyvcf2_variant.variant_to_list(vcf_variant,
-                                                  samples_i,
+            outs = cyvcf2_variant.variant_to_list(samples_i,
                                                   hom_carriers,
-                                                  info_subfields, 
+                                                  cyvcf2_vcf.info_subfields, 
                                                   GT_VARNAMES, 
                                                   csqs_maximpact=csqs_maximpact_list,
                                                   max_csq_scores=max_csq_scores,
