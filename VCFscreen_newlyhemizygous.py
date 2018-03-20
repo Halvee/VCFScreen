@@ -20,7 +20,7 @@ import vcfscreen.screens as screens
 from vcfscreen.screens import variant_screen,hemi_screen
 from vcfscreen.vcf_cnds import VcfCnds
 from vcfscreen.misc import init_out_file,append_out_file,str_none_split
-import vcfscreen.cyvcf2_variant as cyvcf2_variant
+from vcfscreen.cyvcf2_variant import Cyvcf2Vcf,Cyvcf2Variant
 
 X_CHROM_INTERVAL="X:1-155270560"
 GT_VARNAMES=['genotypes', 'gt_alt_depths', 'gt_alt_freqs', 'gt_bases',
@@ -80,18 +80,18 @@ def main(ARGS = None):
     if args.mid_cnds != None: mid_cnds = VcfCnds(args.mid_cnds)
 
     """
-    init cyvcf2 VCF obj, get header list 
+    init cyvcf2 VCF obj, get info subfields, header for output
     """
     vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
-    info_subfields = cyvcf2_variant.get_info_subfields(vcf)
-    csq_keys = cyvcf2_variant.get_csq_keys(vcf, spliton="Format: ", delim="|")
-    vcf_header_str = cyvcf2_variant.header_to_list(vcf,
-                                                   gt_varnames=GT_VARNAMES,
-                                                   max_impact=args.max_impact,
-                                                   max_impact_csqs=args.max_impact_csqs,
-                                                   max_csq_scores=args.max_csq_scores,
-                                                   min_csq_scores=args.min_csq_scores,
-                                                   delim="\t")
+    cyvcf2_vcf = Cyvcf2Vcf(vcf)
+    cyvcf2_vcf.get_info_subfields()
+    cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
+    vcf_header_str = cyvcf2_vcf.header_to_list(gt_varnames=GT_VARNAMES,
+                                               max_impact=args.max_impact,
+                                               max_impact_csqs=args.max_impact_csqs,
+                                               max_csq_scores=args.max_csq_scores,
+                                               min_csq_scores=args.min_csq_scores,
+                                               delim="\t")
 
     """
     create sample idx

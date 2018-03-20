@@ -16,7 +16,7 @@ import cyvcf2
 from collections import defaultdict
 import vcfscreen.screens as screens
 import vcfscreen.misc as misc
-import vcfscreen.cyvcf2_variant as cyvcf2_variant
+from vcfscreen.cyvcf2_variant import Cyvcf2Vcf,Cyvcf2Variant
 from vcfscreen.samples import Samples
 from vcfscreen.vcf_cnds import VcfCnds
 from vcfscreen.annot import AnnotTxs

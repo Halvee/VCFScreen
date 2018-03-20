@@ -108,7 +108,6 @@ def denovo_screen(vcf_variant, samples, iid_gts=set([1,2]),
                   pro_hom_phredmin=None, par_het_phredmin=None):
     dnm_carriers=set()
     alt=vcf_variant.ALT[0]
-    print(alt)
     if alt == '*': return dnm_carriers
     variant_id="-".join([vcf_variant.CHROM, str(vcf_variant.POS),
                          vcf_variant.REF, alt])

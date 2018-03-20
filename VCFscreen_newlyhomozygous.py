@@ -16,7 +16,7 @@ import cyvcf2
 from collections import defaultdict
 import vcfscreen.screens as screens
 import vcfscreen.misc as misc
-import vcfscreen.cyvcf2_variant as cyvcf2_variant
+from vcfscreen.cyvcf2_variant import Cyvcf2Vcf,Cyvcf2Variant
 from vcfscreen.samples import Samples
 from vcfscreen.vcf_cnds import VcfCnds
 from vcfscreen.annot import AnnotTxs
@@ -61,16 +61,16 @@ def main(ARGS = None):
     """
     init cyvcf2 VCF obj, get info subfields, header for output
     """
-    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True, gts012=True)
-    info_subfields = cyvcf2_variant.get_info_subfields(vcf)
-    csq_keys = cyvcf2_variant.get_csq_keys(vcf, spliton="Format: ", delim="|")
-    vcf_header_str = cyvcf2_variant.header_to_list(vcf,
-                                                   gt_varnames=GT_VARNAMES,
-                                                   max_impact=args.max_impact,
-                                                   max_impact_csqs=args.max_impact_csqs,
-                                                   max_csq_scores=args.max_csq_scores,
-                                                   min_csq_scores=args.min_csq_scores,
-                                                   delim="\t")
+    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
+    cyvcf2_vcf = Cyvcf2Vcf(vcf)
+    cyvcf2_vcf.get_info_subfields()
+    cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
+    vcf_header_str = cyvcf2_vcf.header_to_list(gt_varnames=GT_VARNAMES,
+                                               max_impact=args.max_impact,
+                                               max_impact_csqs=args.max_impact_csqs,
+                                               max_csq_scores=args.max_csq_scores,
+                                               min_csq_scores=args.min_csq_scores,
+                                               delim="\t")
     
     """
     create sample idx
