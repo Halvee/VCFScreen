@@ -24,7 +24,10 @@ def args_vars(args):
                       help="comma delim set of allele freq fields in vcf INFO.")
     args.add_argument("--internal-af-max", type=float,
                       action="store", default=None,
-                      help="maximum allowed internal leave-one-out allele freq")
+                      help="maximum allowed internal minor allele freq")
+    args.add_argument("--internal-ctrl-af-max", type=float,
+                      action="store", default=None,
+                      help="maximum allowed ctrl-only internal minor allele freq")
     args.add_argument("--vcf-info-flags-exclude", type=str,
                       action="store", default=None,
                       help="comma-delimited flags in VCF info to skip vars " + \

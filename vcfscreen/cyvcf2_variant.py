@@ -98,9 +98,7 @@ class Cyvcf2Variant(object):
     def __init__(self, cyvcf2_variant_i):
         self.cyvcf2_variant = cyvcf2_variant_i
         self.annot_txs = None
-        self.maf = None
-        self.case_maf = None
-        self.ctrl_maf = None
+        self.metadata = {}
 
     def variant_to_list(self, samples, sample_carriers,
                         info_subfields, gt_varnames,
@@ -239,6 +237,16 @@ class Cyvcf2Variant(object):
                 qual_impact_pass = True
                 break
         return qual_impact_pass
+
+    def compute_maf(self, samples_include_idxs):
+        gts = self.cyvcf2_variant.gt_types[samples_include_idxs]
+        n_alt_alleles = 0
+        n_samples = len(gts)
+        for gt in gts:
+            if gt != 3: 
+                n_alt_alleles += gt
+        maf = float(n_alt_alleles) / (2*n_samples) 
+        return maf
 
 def iterator(intervals, cyvcf2_vcf_i, verbose=False):
     '''

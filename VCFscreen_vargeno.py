@@ -50,6 +50,12 @@ def main(ARGS = None):
     n_ctrls = len(samples_i.ctrls)
 
     """
+    get case, control idxs
+    """
+    case_idxs = [samples_i.samples[x].idx for x in samples_i.cases]
+    ctrl_idxs = [samples_i.samples[x].idx for x in samples_i.ctrls]
+
+    """
     read cnds files
     """
     var_cnds = None
@@ -169,6 +175,12 @@ def main(ARGS = None):
             ## filter on user-defined maximum internal MAF
             if args.internal_af_max != None:
                 if vcf_variant.INFO.get("AF") > args.internal_af_max:
+                    continue
+
+            ## filter on user-defined maximum internal control-only MAF
+            if args.internal_ctrl_af_max != None:
+                ctrl_af = cyvcf_variant.compute_maf(ctrl_idxs)
+                if ctrl_af >= args.internal_ctrl_af_max:
                     continue
 
             ## filter on user-defined maximum external MAF
