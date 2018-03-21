@@ -69,7 +69,6 @@ class Cyvcf2Vcf(object):
         if min_csq_scores != None:
             for min_csq_score in min_csq_scores:
                 header_list.append(min_csq_score + "_min") 
-        self.get_info_subfields()
         header_list.extend(self.info_subfields)
         header_list.extend(gt_varnames)
 
