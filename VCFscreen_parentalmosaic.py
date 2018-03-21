@@ -64,7 +64,7 @@ def main(ARGS = None):
     """
     init cyvcf2 VCF obj, get info subfields, header for output
     """
-    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
+    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True, gts012=True)
     cyvcf2_vcf = Cyvcf2Vcf(vcf)
     cyvcf2_vcf.get_info_subfields()
     cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
@@ -271,8 +271,7 @@ def main(ARGS = None):
             iids = list(mosaic_carriers)
             for iid in iids: 
                 samples_i.samples[iid].varcounts["mosaic"] += 1
-            outs = cyvcf2_variant.variant_to_list(vcf_variant,
-                                                  samples_i,
+            outs = cyvcf2_variant.variant_to_list(samples_i,
                                                   mosaic_carriers,
                                                   cyvcf2_vcf.info_subfields, 
                                                   GT_VARNAMES, 

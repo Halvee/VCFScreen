@@ -82,7 +82,7 @@ def main(ARGS = None):
     """
     init cyvcf2 VCF obj, get info subfields, header for output
     """
-    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
+    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True, gts012=True)
     cyvcf2_vcf = Cyvcf2Vcf(vcf)
     cyvcf2_vcf.get_info_subfields()
     cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
@@ -98,6 +98,12 @@ def main(ARGS = None):
     """
     samples_i.get_vcf_idx(vcf.samples)
 
+    """                                                                         
+    get case, control idxs                                                      
+    """                                                                         
+    case_idxs = [samples_i.samples[x].idx for x in samples_i.cases]             
+    ctrl_idxs = [samples_i.samples[x].idx for x in samples_i.ctrls]    
+    
     """
     iterate through all variants, performing newlyhemizygous screen on each one
     """
@@ -167,8 +173,11 @@ def main(ARGS = None):
                                               af_max_fields=args.af_max_fields)
             if var_pass == False: continue
 
+        hemi_carriers = set()
         if iid_cnds != None and pid_cnds != None and mid_cnds != None: 
             for iid in male_trios:
+                pid=samples_i.samples[iid].pid
+                mid=samples_i.samples[iid].mid
                 iid_idx=samples_i.samples[iid].idx
                 pid_idx=samples_i.samples[pid].idx
                 mid_idx=samples_i.samples[mid].idx

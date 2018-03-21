@@ -8,7 +8,7 @@
 '''
 
 def args_vars(args):
-    args.add_arugment("--force-overwrite", action="store_true",
+    args.add_argument("--force-overwrite", action="store_true",
                       default=False, 
                       help="force overwrite of output tsv if it exists.")
     args.add_argument("--filter-include", type=str,

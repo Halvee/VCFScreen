@@ -63,7 +63,7 @@ def main(ARGS = None):
     """
     init cyvcf2 VCF obj, get info subfields, header for output
     """
-    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
+    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True, gts012=True)
     cyvcf2_vcf = Cyvcf2Vcf(vcf)
     cyvcf2_vcf.get_info_subfields()
     cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
@@ -133,7 +133,7 @@ def main(ARGS = None):
         """
         alt = vcf_variant.ALT[0]
         if alt == '*': continue
-
+        
         ## if no qualifying impact str found in CSQ, skip
         if args.qual_impacts != None:
             res = cyvcf2_variant.qual_impacts_screen(args.qual_impacts,
@@ -159,7 +159,7 @@ def main(ARGS = None):
             ctrl_af = cyvcf2_variant.compute_maf(ctrl_idxs)                      
             if ctrl_af > args.internal_ctrl_af_max:                            
                 continue 
-
+        
         ## variant cnds file provided, filter exclusively on that
         if var_cnds != None:
             if var_cnds.test_variant(vcf_variant) == False: continue
@@ -214,7 +214,7 @@ def main(ARGS = None):
                 trio_gts = ([vcf_variant.gt_types[id_x] for id_x in trio_idxs])
                 if trio_gts[0] != 2: 
                     continue
-
+                
                 ## is either parent sample hom alt at site?
                 if trio_gts[1] != 1 or trio_gts[2] != 1: 
                     continue
