@@ -114,7 +114,8 @@ def main(ARGS = None):
     """                                                                         
     init output file                                                         
     """                                                                         
-    misc.init_out_file(args.out_tsv,                                                 
+    misc.init_out_file(args.out_tsv,
+                       force_overwrite = args.force_overwrite,
                        init_line = vcf_header_str)  
 
     """
@@ -287,7 +288,7 @@ def main(ARGS = None):
             outs = cyvcf2_variant.variant_to_list(vcf_variant,
                                                   samples_i,
                                                   trans_carriers,
-                                                  info_subfields, 
+                                                  cyvcf2_vcf.info_subfields, 
                                                   GT_VARNAMES, 
                                                   csqs_maximpact=csqs_maximpact_list,
                                                   max_csq_scores=max_csq_scores,

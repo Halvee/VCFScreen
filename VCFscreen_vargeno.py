@@ -5,7 +5,7 @@ Filename : VCFscreen_vargeno.py
 Author : Matt Halvorsen
 Email : mhalvors1@gmail.com
 Date created : 03/19/2018
-Date last modified : 03/19/2018
+Date last modified : 03/21/2018
 Python version : 2.7
 '''
 
@@ -105,6 +105,7 @@ def main(ARGS = None):
     init output file                                                         
     """                                                                         
     misc.init_out_file(args.out_tsv,
+                       force_overwrite = args.force_overwrite,
                        init_line = vcf_header_str)  
 
     """

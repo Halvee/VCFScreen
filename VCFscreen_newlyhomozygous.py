@@ -107,7 +107,8 @@ def main(ARGS = None):
     """                                                                         
     init output file                                                         
     """                                                                         
-    misc.init_out_file(args.out_tsv,                                                 
+    misc.init_out_file(args.out_tsv,       
+                       force_overwrite = args.force_overwrite,  
                        init_line = vcf_header_str)  
 
     """

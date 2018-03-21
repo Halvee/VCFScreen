@@ -20,8 +20,9 @@ def str_none_split(string, split_on):
 
 def init_out_file(out_filename, 
                   init_line = "",
+                  force_overwrite=False,
                   check_existance=True):
-    if os.path.exists(out_filename):
+    if os.path.exists(out_filename) and force_overwrite == False:
         yn=raw_input("File " + out_filename + " exists. " + \
                      "Overwrite? [Y/n] ")
         if yn != "Y":

@@ -4,10 +4,13 @@
     Author : Matt Halvorsen
     Email : mhalvors1@gmail.com
     Date created : 03/19/2018
-    Date last modified : 03/19/2018
+    Date last modified : 03/21/2018
 '''
 
 def args_vars(args):
+    args.add_arugment("--force-overwrite", action="store_true",
+                      default=False, 
+                      help="force overwrite of output tsv if it exists.")
     args.add_argument("--filter-include", type=str,
                       action="store", default=None,
                       help="comma delim set of FILTER classifs to allow, " + \
