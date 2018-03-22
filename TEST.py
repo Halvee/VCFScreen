@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 '''
-Filename : VCFscreen_parentaltransmitted.py 
+Filename : VCFscreen_vargeno.py 
 Author : Matt Halvorsen
 Email : mhalvors1@gmail.com
 Date created : 03/19/2018
-Date last modified : 03/19/2018
+Date last modified : 03/21/2018
 Python version : 2.7
 '''
 
@@ -31,12 +31,6 @@ def main(ARGS = None):
     args = parse_args(ARGS)
 
     """
-    set name of gt class
-    """
-    gt_class = "het_trans"
-    if args.ntrans == True: gt_class = "het_ntrans"
-
-    """
     convert certain comma delim str args to lists
     """
     args.qual_impacts = misc.str_none_split(args.qual_impacts, ",")
@@ -59,31 +53,24 @@ def main(ARGS = None):
     read cnds files
     """
     var_cnds = None
-    pro_cnds = None
-    transpar_cnds = None
-    ntranspar_cnds = None
+    gt_cnds = None
     if args.variant_cnds != None: var_cnds = VcfCnds(args.variant_cnds)
-    if args.pro_cnds != None: pro_cnds = VcfCnds(args.pro_cnds)
-    if args.transpar_cnds != None: transpar_cnds = VcfCnds(args.transpar_cnds)
-    if args.ntranspar_cnds != None: ntranspar_cnds = VcfCnds(args.ntranspar_cnds) 
+    if args.gt_cnds != None: sample_cnds = VcfCnds(args.gt_cnds)
 
     """
     init cyvcf2 VCF obj, get info subfields, header for output
     """
-    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True, gts012=True)
+    vcf = cyvcf2.VCF(args.in_vcf, strict_gt=True)
     cyvcf2_vcf = Cyvcf2Vcf(vcf)
     cyvcf2_vcf.get_info_subfields()
     cyvcf2_vcf.get_csq_keys(spliton="Format: ", delim="|")
-    vcf_header_str = cyvcf2_vcf.header_to_list(main_fields=["PAR_IID","PRO_IID","CHROM",
-                                                            "POS","ID","REF","ALT",
-                                                            "QUAL","FILTER"],
-                                               gt_varnames=GT_VARNAMES,
+    vcf_header_str = cyvcf2_vcf.header_to_list(gt_varnames=GT_VARNAMES,
                                                max_impact=args.max_impact,
                                                max_impact_csqs=args.max_impact_csqs,
                                                max_csq_scores=args.max_csq_scores,
                                                min_csq_scores=args.min_csq_scores,
                                                delim="\t")
- 
+    
     """
     create sample idx
     """
@@ -98,7 +85,7 @@ def main(ARGS = None):
     """
     iterate through all variants, performing de novo screen on each one
     """
-    trans_counts = defaultdict(int)
+    vargeno_counts = defaultdict(int)
     prev_chrom = None
     linenum=0
 
@@ -127,8 +114,14 @@ def main(ARGS = None):
     for vcf_variant in cyvcf2_vcf.iterator(intervals):
         linenum+=1
         #if linenum == 1000000: break
+
+        """
+        create new Cyvcf2Variant instance
+        """
+        cyvcf2_variant=Cyvcf2Variant(vcf_variant)
+
         if vcf_variant.CHROM != prev_chrom:
-            print("Extracting " + gt_class + " from chrom " + vcf_variant.CHROM)
+            print("Extracting variants from chrom " + vcf_variant.CHROM)
             prev_chrom = vcf_variant.CHROM
 
         """
@@ -136,11 +129,6 @@ def main(ARGS = None):
         """
         alt = vcf_variant.ALT[0]
         if alt == '*': continue
-
-        """
-        create new Cyvcf2Variant instance
-        """
-        cyvcf2_variant=Cyvcf2Variant(vcf_variant)
 
         ## if no qualifying impact str found in CSQ, skip
         if args.qual_impacts != None:
@@ -154,12 +142,12 @@ def main(ARGS = None):
         max_csq_scores = []
         min_csq_scores = []
         if args.max_impact == True:
-            cyvcf2_variant.get_annot_txs(cyvcf2_vcf.csq_keys,
+            cyvcf2_variant.get_annot_txs(cyvcf2_vcf.csq_keys, 
                                          csq_subfield="CSQ")
             res=cyvcf2_variant.maxmin_csqs(max_impact_csqs=args.max_impact_csqs,
-                                           max_csq_scores=args.max_csq_scores,
+                                           max_csq_scores=args.max_csq_scores, 
                                            min_csq_scores=args.min_csq_scores,
-                                           impact_subfield="IMPACT") 
+                                           impact_subfield="IMPACT")
             (csqs_maximpact_list, max_csq_scores, min_csq_scores) = res
 
         ## filter on internal ctrl-only maf, can't do in var cnds file          
@@ -167,7 +155,7 @@ def main(ARGS = None):
             ctrl_af = cyvcf2_variant.compute_maf(ctrl_idxs)                      
             if ctrl_af > args.internal_ctrl_af_max:                            
                 continue 
-
+        
         ## variant cnds file provided, filter exclusively on that
         if var_cnds != None:
             if var_cnds.test_variant(vcf_variant) == False: continue
@@ -181,7 +169,7 @@ def main(ARGS = None):
             elif args.filter_include != None and vcf_variant.FILTER != None:
                 filter_include = set(",".split(args.filter_include))
                 if vcf_variant not in filter_include: continue
-           
+            
             ## filter on user-defined VCF INFO flags
             if args.vcf_info_flags_exclude != None:
                 vcf_info_flags_fail = False
@@ -195,7 +183,7 @@ def main(ARGS = None):
             if args.internal_af_max != None:
                 if vcf_variant.INFO.get("AF") > args.internal_af_max:
                     continue
-
+            
             ## filter on user-defined maximum external MAF
             if args.af_max_fields != None and args.af_max != None:
                 af_max_fields = args.af_max_fields.split(",")
@@ -207,89 +195,39 @@ def main(ARGS = None):
                         break
                 if af_max_fail == True: continue
 
-        trans_carriers = set()
-        if pro_cnds != None and transpar_cnds != None and ntranspar_cnds != None:
-            for iid in samples_i.trios:
-                pid = samples_i.trios[iid].pid
-                mid = samples_i.trios[iid].mid
+        var_carriers = set()
+        if gt_cnds != None: 
+            for iid in samples_i.samples:
                 iid_idx=samples_i.samples[iid].idx
-                pid_idx=samples_i.samples[pid].idx
-                mid_idx=samples_i.samples[mid].idx
-                trio_idxs=(iid_idx,pid_idx,mid_idx)
-
-                ## get trio gts
-                trio_gts = ([vcf_variant.gt_types[id_x] for id_x in trio_idxs])
-
-                ## parent with higher % alt reads is transpar, 
-                ## other parent is ntranspar
-                pid_alt_freq = vcf_variant.gt_alt_freqs[pid_idx]
-                mid_alt_freq = vcf_variant.gt_alt_freqs[mid_idx]
-                if pid_alt_freq > mid_alt_freq:
-                    transpar = pid
-                    transpar_idx = pid_idx
-                    transpar_gt = trio_gts[1]
-                    ntranspar = mid
-                    ntranspar_idx = mid_idx
-                    ntranspar_gt = trio_gts[2]
-                else:
-                    transpar = mid 
-                    transpar_idx = mid_idx 
-                    transpar_gt = trio_gts[2] 
-                    ntranspar = pid
-                    ntranspar_idx = pid_idx
-                    ntranspar_gt = trio_gts[1]
-
-                ## is more likely transmitting parent GT equal to 1?
-                if transpar_gt not in set([1]): continue
-
-                ## is likely transmitting parent GT equal to 0?
-                if ntranspar_gt not in set([0]): continue
-
-                ## if looking at trans variants, keep if pro is het at site
-                ## if looking at ntnrans variant, keep if pro i homref at site
-                if args.ntrans == False:
-                    if trio_gts[0] not in set([1]): continue
-                else:
-                    if trio_gts[0] not in set([0]): continue
-
-                ## test if proband passes conditions in proband cnds file
-                if pro_cnds.test_gt(vcf_variant, iid_idx) == False: continue  
-
-                ## test if more likely transmitting parent passes conditions
-                ## in transpar cnds file
-                if transpar_cnds.test_gt(vcf_variant, transpar_idx) == False: 
-                    continue
+                pheno = samples_i.samples[iid].pheno
+                                
+                ## is iid het or hom alt at site?
+                sample_gt = vcf_variant.gt_types[iid_idx]
+                if sample_gt not in set([1,2]): continue
                 
-                ## test if less likely transmitting parent passes conditions
-                ## in ntranspar cnds file
-                if ntranspar_cnds.test_gt(vcf_variant, ntranspar_idx) == False:
-                    continue
+                ## test if sample passes conditions in genotype cnds file
+                if gt_cnds.test_gt(vcf_variant, iid_idx) == False: continue        
                 
-                trans_carriers.add((transpar, iid))
+                var_carriers.add(iid)
                 
         else:
-            trans_screen = screens.trans_screen
-            res = trans_screen(vcf_variant, samples_i, ntrans=args.ntrans,
-                               transpar_gts=set([1]), ntranspar_gts=set([0]),
-                               min_coverage=args.min_coverage,
-                               pro_min_perc_alt=args.pro_min_perc_alt,
-                               pro_max_perc_alt=args.pro_max_perc_alt,
-                               transpar_min_perc_alt=args.transpar_min_perc_alt, 
-                               transpar_max_perc_alt=args.transpar_max_perc_alt,
-                               ntranspar_max_perc_alt=args.ntranspar_max_perc_alt,
-                               pro_homref_phredmin=args.pro_homref_phredmin, 
-                               pro_het_phredmax=args.pro_het_phredmax,
-                               pro_homalt_phredmin=args.pro_homalt_phredmin)
-            trans_carriers = res
+            vargeno_screen = screens.vargeno_screen
+            vargeno_carriers = vargeno_screen(vcf_variant, samples_i,
+                                              min_coverage = args.min_coverage,
+                                              min_perc_alt=args.min_perc_alt,
+                                              max_perc_alt=args.max_perc_alt,
+                                              homref_phredmin=args.homref_phredmin,
+                                              het_phredmax=args.het_phredmax, 
+                                              het_phredmin=args.het_phredmin,
+                                              homalt_phredmin=args.homalt_phredmin,
+                                              homalt_phredmax=args.homalt_phredmax)
 
-        if len(trans_carriers) > 0:
-            transpars_iids = list(trans_carriers)
-            for pair in trans_carriers: 
-                transpar = pair[0]
-                iid = pair[1]
-                samples_i.samples[iid].varcounts[gt_class] += 1
+        if len(vargeno_carriers) > 0:
+            iids = list(vargeno_carriers)
+            for iid in iids: 
+                samples_i.samples[iid].varcounts["vargeno"] += 1
             outs = cyvcf2_variant.variant_to_list(samples_i,
-                                                  trans_carriers,
+                                                  vargeno_carriers,
                                                   cyvcf2_vcf.info_subfields, 
                                                   GT_VARNAMES, 
                                                   csqs_maximpact=csqs_maximpact_list,
@@ -300,7 +238,8 @@ def main(ARGS = None):
                 misc.append_out_file(args.out_tsv, out)
 
     vcf.close()
-    samples_i.print_varcount_stats(var_types=[gt_class])
+    samples_i.print_varcount_stats(var_types=["vargeno"],
+                                   which="samples")
     return
 
 def parse_args(ARGS):
@@ -309,20 +248,15 @@ def parse_args(ARGS):
     args = a.args_vars(args)
     args = a.args_annots(args)
     args = a.args_phredthresh(args,
-                              sampletypes=["pro","transpar", "ntranspar"],
+                              sampletypes=[""],
                               gt_types=["homref","het","homalt"],
                               threshes=["max","min"])
     args = a.args_perc_alt(args,
-                           sampletypes=["pro","transpar","ntranspar"],
+                           sampletypes=[""],
                            threshes=["max","min"])
     args = a.args_cnds(args, variant_cnds=True,
-                        sampletypes=["pro","transpar","ntranspar"])
-    args.add_argument("--ntrans",
-                      action="store_true", default=False,
-                      help="instead of looking for parental transmitted vars, " +\
-                           "look for nontransmitted variants.")
+                        sampletypes=["gt"])
     args = a.args_req(args)
-
     return args.parse_args(args=ARGS)
 
 if __name__ == "__main__":

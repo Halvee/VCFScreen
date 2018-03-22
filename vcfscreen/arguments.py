@@ -16,7 +16,7 @@ def args_vars(args):
                       help="comma delim set of FILTER classifs to allow, " + \
                            "in addition to PASS.")
     args.add_argument("--min-coverage", type=int,
-                      action="store", default=10)
+                      action="store", default=None)
     args.add_argument("--min-qual", type=float,
                       action="store", default=0)
     args.add_argument("--af-max", type=float,
