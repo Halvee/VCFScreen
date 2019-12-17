@@ -1,10 +1,9 @@
-
 '''
 Filename : cyvcf2_variant.py 
 Author : Matt Halvorsen
 Email : mhalvors1@gmail.com
 Date created : 03/19/2018
-Date last modified : 03/20/2018
+Date last modified : 12/17/2019
 '''
 
 import cyvcf2
@@ -30,7 +29,8 @@ class Cyvcf2Vcf(object):
                 self.info_subfields.append(str(vcf_header_entry['ID']))
         return self
 
-    def get_csq_keys(self, spliton="Format: ", delim="|"): 
+    def get_csq_keys(self, spliton="Format: ", chars_del=['"',"'"],
+                     delim="|", ann_id="CSQ"): 
         '''
         get and store CSQ keys, store as list variable in self
         '''
@@ -38,10 +38,11 @@ class Cyvcf2Vcf(object):
             try:
                 field = str(vcf_header_entry['HeaderType'])
                 id = str(vcf_header_entry['ID'])
-                if field == "INFO" and id == "CSQ":
+                if field == "INFO" and id == ann_id:
                     csq_str_full = vcf_header_entry['Description']
                     csq_str = csq_str_full.split(spliton)[-1]
-                    csq_str = csq_str.replace('"','')
+                    for char_del in chars_del:
+                        csq_str = csq_str.replace(char_del,'')
                     self.csq_keys = csq_str.split(delim)
             except:
                 pass
@@ -198,8 +199,9 @@ class Cyvcf2Variant(object):
         csqs_maximpact_list = []
         if max_impact_csqs != None:
             csqs_max_impact = annottxs_i.max_csq(max_impact_csqs,                                      
-                                                 impact_subfield,                                      
-                                                 "max")     
+                                                 impact_subfield,   
+                                                 "max",                    
+                                                 impact_classif=True)             
             for csq_max_impact in csqs_max_impact:
                 csqs_maximpact_list.append(csq_max_impact)
         
@@ -208,7 +210,8 @@ class Cyvcf2Variant(object):
             for max_csq_score in max_csq_scores:
                 csq_max = annottxs_i.max_csq([max_csq_score],                                      
                                              max_csq_score,                                      
-                                             "max")
+                                             "max",
+                                             impact_classif=True)
                 max_csq_scores_list.append(csq_max[0])
 
         min_csq_scores_list = []
@@ -216,7 +219,8 @@ class Cyvcf2Variant(object):
             for min_csq_score in min_csq_scores:
                 csq_min = annottxs_i.max_csq([min_csq_score],
                                              min_csq_score,
-                                             "min")
+                                             "min",
+                                             impact_classif=True)
                 min_csq_scores_list.append(csq_min[0])
         
         return csqs_maximpact_list,max_csq_scores_list,min_csq_scores_list
@@ -267,13 +271,13 @@ def get_info_subfields(cyvcf2_vcf_i):
             info_subfields.append(str(vcf_header_entry['ID']))
     return info_subfields
 
-def get_csq_keys(cyvcf2_vcf_i, spliton="Format: ", delim="|"): 
+def get_csq_keys(cyvcf2_vcf_i, spliton="Format: ", delim="|", ann_id="CSQ"): 
     csq_keys = None
     for vcf_header_entry in cyvcf2_vcf_i.header_iter(): 
         try:
             field = str(vcf_header_entry['HeaderType'])
             id = str(vcf_header_entry['ID'])
-            if field == "INFO" and id == "CSQ":
+            if field == "INFO" and id == ann_id:
                 csq_str_full = vcf_header_entry['Description']
                 csq_str = csq_str_full.split(spliton)[-1]
                 csq_str = csq_str.replace('"','')

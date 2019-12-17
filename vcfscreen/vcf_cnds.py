@@ -1,13 +1,15 @@
 
 '''
-    Filename : VCFscreen_newlyhemizygous.py 
+    Filename : vcf_cnds.py 
     Author : Matt Halvorsen
     Email : mhalvors1@gmail.com
     Date created : 03/19/2018
-    Date last modified : 03/19/2018
+    Date last modified : 12/17/2019
 '''
 
 import os
+import misc   
+import re
 import operator
 
 class VcfCnds(object):
@@ -35,13 +37,13 @@ class VcfCnds(object):
                                 "line " + str(i) + " : " + line.rstrip())
             if operand_str in ["in","nin"]:
                 operand = operand_str
-                if os.path.isfile(value):
-                    value = read_set_file(value)
-                else:
-                    value = set(value.split(","))
+                #if os.path.isfile(value):
+                #    value = read_set_file(value)
+                #else:
+                #    value = set(value.split(","))
             elif operand_str in ["grep","grepv"]:
                 operand = operand_str
-                value = value
+                #value = value
             else:
                 try:
                     operand = operator.__dict__[operand_str]
@@ -80,12 +82,11 @@ class VcfCnds(object):
                 vcf_val = getattr(vcf_variant, field)
             if cmp_vals(vcf_val, value, operand) == False:
                 return False
-
         return True
 
 def read_set_file(set_filename):
     set_out = set()
-    fh = misc.open_file(set_filename)
+    fh = open(set_filename, "r")
     for line in fh:
         set_out.add(line.rstrip())
     fh.close()
@@ -99,16 +100,22 @@ def cmp_vals(val, value, operand):
         if val in value:
             return False
     elif operand == "grep":
-        if val.find(value) == -1:
+        if re.search(value, val) == None:
             return False
     elif operand == "grepv":
-        if val.find(value) != -1:
+        if re.search(value, val) != None:
             return False
     else:
-        if value != None and val == None: 
-            val = 0
-        if operand(val, value) == False:
-            return False
+        try:
+            if operand(float(val), value) == False:
+                return False
+        except:
+            try:
+                if operand(val, value) == False:
+                    return False
+            except:
+                return False
+        
     return True
 
 def format_value(value):

@@ -3,7 +3,7 @@
     Author : Matt Halvorsen
     Email : mhalvors1@gmail.com
     Date created : 03/19/2018
-    Date last modified : 03/19/2018
+    Date last modified : 12/17/2019
 '''
 
 import sys
@@ -18,12 +18,6 @@ IMPACT_RANKINGS_INV = {3:"HIGH",
                        1:"LOW",
                        0:"MODIFIER",
                        -1:"NA"}
-CSQ_KEYS_STR="Allele,Consequence,IMPACT,SYMBOL,Gene,Feature_type,Feature," + \
-             "BIOTYPE,EXON,INTRON,HGVSc,HGVSp,cDNA_position,CDS_position," + \
-             "Protein_position,Amino_acids,Codons,Existing_variation," + \
-             "DISTANCE,STRAND,FLAGS,VARIANT_CLASS,SYMBOL_SOURCE,HGNC_ID," + \
-             "CANONICAL,CCDS,GIVEN_REF,USED_REF,SIFT,PolyPhen," + \
-             "DOMAINS,HGVS_OFFSET"
 
 class AnnotTxs(object):
     def __init__(self, annot_keys, annot_line, 
@@ -45,7 +39,7 @@ class AnnotTxs(object):
             self.annots[i] = AnnotTx(self.annot_keys, annot_vals)
         return self
 
-    def max_csq(self, csqs_return, csq_key, csq_func):
+    def max_csq(self, csqs_return, csq_key, csq_func, impact_classif=False):
         if csq_func != "max" and csq_func != "min":
             raise Exception(csq_func + " not applicable on " + \
                             csq_key + ", max or min only.")
@@ -63,7 +57,7 @@ class AnnotTxs(object):
             if csq_i == "": 
                 csq_i = "NA"
                 continue
-            elif csq_key == "IMPACT":
+            elif impact_classif==True:
                 csq_i = IMPACT_RANKINGS[csq_i]
             else:
                 csq_i = float(csq_i)
@@ -75,13 +69,12 @@ class AnnotTxs(object):
             if csq_i == "": 
                 csq_i = "NA"
                 continue
-            if csq_key == "IMPACT":
+            if impact_classif==True:
                 csq_i = IMPACT_RANKINGS[csq_i]
             if float(csq_i) == max_val:
                 i_keep["max"].append(i)
             if float(csq_i) == min_val:
                 i_keep["min"].append(i)
-
         for i in i_keep[csq_func]:
             for j in range(len(csqs_return)):
                 val = self.annots[i].__dict__[csqs_return[j]]
@@ -116,4 +109,4 @@ def process_csq_header_desc(header_desc_str,
     for replace_char in replace_chars:                                          
         header_desc_str = header_desc_str.replace(replace_char, "")             
     header_desc_list = header_desc_str.split(subsplit)                          
-    return header_desc_list     
+    return header_desc_list 
